@@ -1,0 +1,20 @@
+{
+	"cSpell.words": [
+		"Listy",
+		"esnext",
+		"forestini",
+		"iife",
+		"omasakun",
+		"pnpm",
+		"pnpx",
+		"prebuild",
+		"sourcemap",
+		"tsbuildinfo",
+		"unistore"
+	],
+	"files.exclude": {
+		".git": true,
+		".tmp": true,
+		"node_modules": true,
+	}
+}

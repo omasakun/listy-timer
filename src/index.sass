@@ -1,0 +1,141 @@
+@import "util"
+
+.hidden
+	display: none !important
+
+.icon
+	display: inline-block
+	width: 1.8rem
+	height: 1.8rem
+	background-color: $fg
+	color: transparent
+	font-size: 0
+	vertical-align: bottom
+	-webkit-mask: no-repeat center/1rem
+	mask: no-repeat center/1rem
+	>*
+		font-size: 0
+	&.arrow-down
+		-webkit-mask-image: url("arrow-down-outline.svg")
+	&.arrow-up
+		-webkit-mask-image: url("arrow-up-outline.svg")
+	&.close-square
+		-webkit-mask-image: url("close-square-outline.svg")
+	&.pause-circle
+		-webkit-mask-image: url("pause-circle-outline.svg")
+	&.play-circle
+		-webkit-mask-image: url("play-circle-outline.svg")
+	&.plus-circle
+		-webkit-mask-image: url("plus-circle-outline.svg")
+	&.plus
+		-webkit-mask-image: url("plus-outline.svg")
+	&.refresh
+		-webkit-mask-image: url("refresh-outline.svg")
+	&.trash
+		-webkit-mask-image: url("trash-2-outline.svg")
+
+#app, #app-404
+	max-width: 30rem
+	height: 100%
+	margin: 0 auto
+	.title
+		font-size: 2rem
+		font-weight: 400
+	.bold-title
+		font-size: 0.8rem
+		font-weight: 700
+		letter-spacing: 0.13rem
+		text-transform: uppercase
+	a.link
+		padding: 0.2rem 0.5rem
+#app-404
+	padding: 2rem 1rem 0
+	.bottom
+		margin-top: 1rem
+#app
+	.btn.-text
+		padding: 0
+#header
+	margin-left: 1rem
+	height: 3rem
+	display: flex
+	justify-content: space-between
+	align-items: center
+	>*
+		display: inline-block
+	button
+		height: 100%
+		width: 4rem
+		text-align: end
+		>*
+			margin-right: 1rem
+#timers
+	.mono
+		font-family: $font-mono
+		font-weight: 300
+	ul
+		list-style: none
+	.one-line
+		height: 3rem
+		margin: 0 0.5rem
+		display: flex
+		align-items: center
+		>*
+			display: inline-block
+			flex-shrink: 0
+			flex-grow: 0
+		.duration
+			font-weight: 500
+		.duration-lap
+			margin-left: 0.5rem
+		.timer-title
+			margin-left: 0.5rem
+			flex-shrink: 1
+			flex-grow: 1
+			text-overflow: ellipsis
+			overflow: hidden
+			white-space: nowrap
+		button
+			height: 2rem
+			width: 2rem
+			margin: 0.5rem
+	.full
+		.title-input-container
+			padding: 1rem
+		input
+			width:100%
+		max-height: 50vh
+		overflow-y: scroll
+	.lap-list
+		margin: 0.5rem 0
+		ol
+			list-style: none
+		li
+			text-align: center
+			margin-right: 1.2rem
+			>*
+				display: inline-block
+		.lap-index
+			text-align: end
+			min-width: 3rem
+		.self-duration
+			margin-left: 1rem
+			font-weight: 500
+		.total-duration
+			margin-left: 0.5rem
+		.lap-remove
+			margin-left: 0.25rem
+			width: 2rem
+			margin-right: 1rem // .self-duration と .total-duration の間が画面の中心になるように
+	.delete-timer
+		margin: 1rem auto 1rem
+		display: block
+		.icon
+			background-color: $normal-color
+	.alert
+		button
+			margin: 0.5rem 0.5rem 0.5rem 0
+		.buttons
+			text-align: end
+		.-text
+			padding: 0.3em 1em

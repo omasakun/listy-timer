@@ -1,5 +1,32 @@
+import { render } from 'lit-html';
+import { getJSON, setJSON, subscribe, getState } from './store';
+import { app } from './view';
+
 showBanner();
 normalizeURL();
+persistStore();
+autoRender();
+
+window["gs"] = getState
+
+function autoRender() {
+	let shouldUpdate = true
+	const fn = () => {
+		if (shouldUpdate || true) {
+			render(app(), document.body)
+			shouldUpdate = false
+		}
+		requestAnimationFrame(fn)
+	}
+	subscribe(() => shouldUpdate = true)
+	requestAnimationFrame(fn)
+}
+function persistStore() {
+	const json = localStorage.getItem("persist_store");
+	if (json) setJSON(json);
+	subscribe(() => localStorage.setItem("persist_store", getJSON()));
+}
+
 
 function showBanner() {
 	const banner = [

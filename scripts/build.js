@@ -20,12 +20,18 @@ const rollup = exec({ displayName: "rollup" })
 const sass = exec({ persistentOutput: true, displayName: "sass" })
 	`sass ${() => i0() + ":" + o()} --no-source-map --update --indented --style=expanded --color --quiet` // TODO: `--quiet` might not be good
 
+const workbox = exec({ displayName: "workbox" })
+	`workbox generateSW scripts/workbox-config.js --loglevel error --color ${i0}/ ${o}/sw.js`
+
 // task chains
 const src = fo.src("src")
 const scripts = src.filterFiles("**/@(*.ts|*.tsx)").cache().then(tsc).then(rollup)
 const styles = src.filterFiles("**/@(*.sass)").cache().then(sass)
 const assets = src.filterFiles("**/!(*.ts|*.tsx|*.sass)")
-const dest = fo.merge([scripts, styles, assets])
+const merged = fo.merge([scripts, styles, assets])
+const offline = merged.cache().then(workbox)
+const dest = fo.merge([merged, offline])
+
 if (watchMode) {
 	dest.browserSync({
 		logPrefix: "BS",

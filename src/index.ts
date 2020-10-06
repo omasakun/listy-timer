@@ -1,11 +1,12 @@
-import { render } from 'lit-html';
-import { getJSON, setJSON, subscribe, getState } from './store';
-import { app } from './view';
+import { render } from "lit-html";
+import { getJSON, setJSON, subscribe, getState } from "./store";
+import { app } from "./view";
 
 showBanner();
 normalizeURL();
 persistStore();
 autoRender();
+installServiceWorker();
 
 function autoRender() {
 	let shouldUpdate = true
@@ -25,6 +26,13 @@ function persistStore() {
 	subscribe(() => localStorage.setItem("persist_store", getJSON()));
 }
 
+function installServiceWorker(){
+	if ("serviceWorker" in navigator) {
+		window.addEventListener("load", () => {
+			navigator.serviceWorker.register("/sw.js");
+		});
+	}
+}
 
 function showBanner() {
 	const banner = [

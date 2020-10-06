@@ -7,8 +7,6 @@ normalizeURL();
 persistStore();
 autoRender();
 
-window["gs"] = getState
-
 function autoRender() {
 	let shouldUpdate = true
 	const fn = () => {

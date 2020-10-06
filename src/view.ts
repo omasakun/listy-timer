@@ -25,9 +25,18 @@ export const app = () => html`
 			</ul>
 			<div class="place-holder-bottom">
 				<div class="end-of-content"></div>
+				<div class="spacer"></div>
 				<div class="made-by">
 					<p>Made by <a href="https://github.com/omasakun" rel="noreferrer" class="link">omasakun</a>
 					</p>
+				</div>
+				<div class="reset-app">
+					<button class="btn -text" @click=${() => {
+						if(confirm("Do you really want to reset the app? This action cannot be undone.")){
+							localStorage.removeItem("persist_store");
+							location.reload();
+						}
+					}}>Reset App</button>
 				</div>
 			</div>
 		</div>

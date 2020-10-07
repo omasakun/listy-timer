@@ -20,6 +20,10 @@
 		<p class="bottom">
 			<a href="/" class="link">Open Listy Timer &gt;</a>
 		</p>
+		<div class="reset-app">
+			<a href="#" class="link" onclick="if(confirm('Do you really want to reset the app? This action cannot be undone.')){localStorage.removeItem('persist_store');location.href='/';}"
+				>Reset App Before Open Listy Timer &gt;</a>
+		</div>
 	</div>
 </body>
 

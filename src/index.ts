@@ -26,11 +26,14 @@ function persistStore() {
 	subscribe(() => localStorage.setItem("persist_store", getJSON()));
 }
 
-function installServiceWorker(){
+function installServiceWorker() {
 	if ("serviceWorker" in navigator) {
-		window.addEventListener("load", () => {
-			navigator.serviceWorker.register("/sw.js");
-		});
+		const { hostname } = location;
+		if (hostname.endsWith("o137.dev") || hostname.endsWith("netlify.app")) { // for debug
+			window.addEventListener("load", () => {
+				navigator.serviceWorker.register("/sw.js");
+			});
+		}
 	}
 }
 

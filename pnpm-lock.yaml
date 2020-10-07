@@ -1,9 +1,15 @@
 dependencies:
   lit-html: 1.3.0
   typescript-lit-html-plugin: 0.9.0
+  workbox-cacheable-response: 5.1.4
+  workbox-expiration: 5.1.4
+  workbox-precaching: 5.1.4
+  workbox-routing: 5.1.4
+  workbox-strategies: 5.1.4
 devDependencies:
   '@rollup/plugin-commonjs': 15.1.0_rollup@2.28.2
   '@rollup/plugin-node-resolve': 9.0.0_rollup@2.28.2
+  '@rollup/plugin-replace': 2.3.3_rollup@2.28.2
   forestini: github.com/omasakun/forestini/eed457c885bd860ee72787247bbd8b960d6e74b2
   node-notifier: 8.0.0
   rollup: 2.28.2
@@ -1033,6 +1039,16 @@ packages:
       rollup: ^1.20.0 || ^2.0.0
     resolution:
       integrity: sha512-XPmVXZ7IlaoWaJLkSCDaa0Y6uVo5XQYHhiMFzOd5qSv5rE+t/UJToPIOE56flKIxBFQI27ONsxb7dqHnwSsjKQ==
+  /@rollup/plugin-replace/2.3.3_rollup@2.28.2:
+    dependencies:
+      '@rollup/pluginutils': 3.1.0_rollup@2.28.2
+      magic-string: 0.25.7
+      rollup: 2.28.2
+    dev: true
+    peerDependencies:
+      rollup: ^1.20.0 || ^2.0.0
+    resolution:
+      integrity: sha512-XPmVXZ7IlaoWaJLkSCDaa0Y6uVo5XQYHhiMFzOd5qSv5rE+t/UJToPIOE56flKIxBFQI27ONsxb7dqHnwSsjKQ==
   /@rollup/pluginutils/3.1.0_rollup@1.32.1:
     dependencies:
       '@types/estree': 0.0.39
@@ -1523,7 +1539,7 @@ packages:
   /browserslist/4.14.5:
     dependencies:
       caniuse-lite: 1.0.30001144
-      electron-to-chromium: 1.3.577
+      electron-to-chromium: 1.3.578
       escalade: 3.1.0
       node-releases: 1.1.61
     dev: true
@@ -2071,10 +2087,10 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-7vmuyh5+kuUyJKePhQfRQBhXV5Ce+RnaeeQArKu1EAMpL3WbgMt5WG6uQZpEVvYSSsxMXRKOewtDk9RaTKXRlA==
-  /electron-to-chromium/1.3.577:
+  /electron-to-chromium/1.3.578:
     dev: true
     resolution:
-      integrity: sha512-dSb64JQSFif/pD8mpVAgSFkbVi6YHbK6JeEziwNNmXlr/Ne2rZtseFK5SM7JoWSLf6gP0gVvRGi4/2ZRhSX/rA==
+      integrity: sha512-z4gU6dA1CbBJsAErW5swTGAaU2TBzc2mPAonJb00zqW1rOraDo2zfBMDRvaz9cVic+0JEZiYbHWPw/fTaZlG2Q==
   /emoji-regex/7.0.3:
     dev: true
     resolution:
@@ -5258,7 +5274,6 @@ packages:
   /workbox-cacheable-response/5.1.4:
     dependencies:
       workbox-core: 5.1.4
-    dev: true
     resolution:
       integrity: sha512-0bfvMZs0Of1S5cdswfQK0BXt6ulU5kVD4lwer2CeI+03czHprXR3V4Y8lPTooamn7eHP8Iywi5QjyAMjw0qauA==
   /workbox-cli/5.1.4:
@@ -5283,13 +5298,11 @@ packages:
     resolution:
       integrity: sha512-xLSGhE/41VWD1qcZyZs5dqwPFFQz8erwrpwrE7h+EBGPsdhCA8UweGWtxuRq33Ullcc1pu/AAp5V2/G4FP/RJg==
   /workbox-core/5.1.4:
-    dev: true
     resolution:
       integrity: sha512-+4iRQan/1D8I81nR2L5vcbaaFskZC2CL17TLbvWVzQ4qiF/ytOGF6XeV54pVxAvKUtkLANhk8TyIUMtiMw2oDg==
   /workbox-expiration/5.1.4:
     dependencies:
       workbox-core: 5.1.4
-    dev: true
     resolution:
       integrity: sha512-oDO/5iC65h2Eq7jctAv858W2+CeRW5e0jZBMNRXpzp0ZPvuT6GblUiHnAsC5W5lANs1QS9atVOm4ifrBiYY7AQ==
   /workbox-google-analytics/5.1.4:
@@ -5310,7 +5323,6 @@ packages:
   /workbox-precaching/5.1.4:
     dependencies:
       workbox-core: 5.1.4
-    dev: true
     resolution:
       integrity: sha512-gCIFrBXmVQLFwvAzuGLCmkUYGVhBb7D1k/IL7pUJUO5xacjLcFUaLnnsoVepBGAiKw34HU1y/YuqvTKim9qAZA==
   /workbox-range-requests/5.1.4:
@@ -5322,14 +5334,12 @@ packages:
   /workbox-routing/5.1.4:
     dependencies:
       workbox-core: 5.1.4
-    dev: true
     resolution:
       integrity: sha512-8ljknRfqE1vEQtnMtzfksL+UXO822jJlHTIR7+BtJuxQ17+WPZfsHqvk1ynR/v0EHik4x2+826Hkwpgh4GKDCw==
   /workbox-strategies/5.1.4:
     dependencies:
       workbox-core: 5.1.4
       workbox-routing: 5.1.4
-    dev: true
     resolution:
       integrity: sha512-VVS57LpaJTdjW3RgZvPwX0NlhNmscR7OQ9bP+N/34cYMDzXLyA6kqWffP6QKXSkca1OFo/v6v7hW7zrrguo6EA==
   /workbox-streams/5.1.4:
@@ -5489,6 +5499,7 @@ packages:
 specifiers:
   '@rollup/plugin-commonjs': ^15.1.0
   '@rollup/plugin-node-resolve': ^9.0.0
+  '@rollup/plugin-replace': ^2.3.3
   forestini: 'github:omasakun/forestini#semver:^2.0.0'
   lit-html: ^1.3.0
   node-notifier: ^8.0.0
@@ -5497,4 +5508,9 @@ specifiers:
   sass: ^1.26.11
   typescript: ^4.0.3
   typescript-lit-html-plugin: ^0.9.0
+  workbox-cacheable-response: ^5.1.4
   workbox-cli: ^5.1.4
+  workbox-expiration: ^5.1.4
+  workbox-precaching: ^5.1.4
+  workbox-routing: ^5.1.4
+  workbox-strategies: ^5.1.4

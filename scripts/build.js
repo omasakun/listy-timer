@@ -30,10 +30,10 @@ const scripts = fo.merge([ts, src.filterFiles("**/*.js")]).cache().then(rollup)
 const styles = src.filterFiles("**/@(*.sass)").cache().then(sass)
 const assets = src.filterFiles("**/!(*.ts|*.tsx|*.js|*.sass)")
 const merged = fo.merge([scripts, styles, assets])
-const offline = merged.cache().then(workbox)
-const dest = fo.merge([merged, offline])
 
 if (watchMode) {
+	const dest = merged
+
 	dest.browserSync({
 		logPrefix: "BS",
 		open: false,
@@ -45,6 +45,9 @@ if (watchMode) {
 	})
 	dest.asyncBuild(async () => notify({ icon: "dialog-information", title: "Forestini", message: "Build Successful!" }))
 } else {
+	const offline = merged.cache().then(workbox)
+	const dest = fo.merge([merged, offline])
+
 	dest.dest("dest")
 }
 

@@ -1,25 +1,25 @@
-import { CacheableResponsePlugin } from 'workbox-cacheable-response';
-import { ExpirationPlugin } from 'workbox-expiration';
-import { precacheAndRoute } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
-import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { CacheableResponsePlugin } from "workbox-cacheable-response";
+import { ExpirationPlugin } from "workbox-expiration";
+import { precacheAndRoute } from "workbox-precaching";
+import { registerRoute } from "workbox-routing";
+import { CacheFirst, StaleWhileRevalidate } from "workbox-strategies";
 
 precacheAndRoute(self.__WB_MANIFEST);
 
 // https://developers.google.com/web/tools/workbox/guides/common-recipes - Google Fonts
 
 registerRoute(
-	({ url }) => url.origin === 'https://fonts.googleapis.com',
+	({ url }) => url.origin === "https://fonts.googleapis.com",
 	new StaleWhileRevalidate({
-		cacheName: 'google-fonts-styles',
+		cacheName: "google-fonts-styles",
 		purgeOnQuotaError: true,
 	})
 );
 
 registerRoute(
-	({ url }) => url.origin === 'https://fonts.gstatic.com',
+	({ url }) => url.origin === "https://fonts.gstatic.com",
 	new CacheFirst({
-		cacheName: 'google-fonts-fonts',
+		cacheName: "google-fonts-fonts",
 		plugins: [
 			new CacheableResponsePlugin({
 				statuses: [0, 200],

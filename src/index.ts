@@ -1,9 +1,6 @@
 import { render } from "lit-html";
-import { getJSON, setJSON, subscribe } from "./store";
-import { app } from "./view";
-
-
-
+import { makeAppState, store } from "./store";
+import { app as view } from "./view";
 
 showBanner();
 normalizeURL();
@@ -12,21 +9,18 @@ autoRender();
 installServiceWorker();
 
 function autoRender() {
-	let shouldUpdate = true
 	const fn = () => {
-		if (shouldUpdate || true) {
-			render(app(), document.body)
-			shouldUpdate = false
-		}
+		render(view(makeAppState(store)), document.body)
 		requestAnimationFrame(fn)
 	}
-	subscribe(() => shouldUpdate = true)
 	requestAnimationFrame(fn)
 }
 function persistStore() {
 	const json = localStorage.getItem("persist_store");
-	if (json) setJSON(json);
-	subscribe(() => localStorage.setItem("persist_store", getJSON()));
+	if (json) store.setJSON(json);
+	const save = () => localStorage.setItem("persist_store", store.getJSON());
+	window.addEventListener("unload", () => save());
+	setInterval(() => save(), 10000);
 }
 
 function installServiceWorker() {

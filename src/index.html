@@ -18,6 +18,37 @@
 
 <body>
 	<!-- see view.ts -->
+	<div id="app">
+		<div id="header">
+			<h1 class="bold-title  invisible">Listy Timer</h1>
+			<button class="btn -text"><!----><code class="icon plus"></code><!----></button>
+		</div>
+		<div id="timers">
+			<div class="place-holder ">
+				<h2 class="title">Listy Timer</h2>
+				<div>Run multiple stopwatches at the same time.</div>
+				<br>
+				<br>
+				<div>
+					Loading...<br>
+					If you're stuck in this screen, press "Reset App" at the bottom.<br>
+				</div>
+				<div class="spacer"></div>
+			</div>
+			<ul>
+			</ul>
+			<div class="place-holder-bottom">
+				<div class="end-of-content"></div>
+				<div class="spacer"></div>
+				<div class="made-by">
+					<p>Made by <a href="https://github.com/omasakun" rel="noreferrer" class="link">omasakun</a></p>
+				</div>
+				<div class="reset-app">
+				<button class="btn -text" onclick="if(confirm('Do you really want to reset the app? This action cannot be undone.')){localStorage.removeItem('persist_store');location.reload();}">Reset App</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </body>
 
 </html>

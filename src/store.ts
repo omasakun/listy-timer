@@ -1,205 +1,319 @@
 /*
-unistoreを使おうと思っていたが、直接stateを書き換えられないストレスに見合うだけのメリットを受けられない気がしたので、かといってimmerを導入するのも心理的な障壁が邪魔してくるので、シンプルな方法を取ることにした。
-規模が小さいからできることかもしれない。
+# Overview
 
-- 状態はシリアライズ可能にする。その限りで、当然stateはメソッドを持ってもいい
-	-> localStorageに状態を保持させたりするのが簡単になる
-- 状態の更新は用途ごとに用意された関数を通して行う
-- 状態の更新を監視する関数subscribeを用意する
-	-> 自動再描画を可能にしたりとかする
+- XxxData / newXxxData: アプリの状態を表現するために十分なJSON化できる型
+- Xxx: アプリの挙動を作るために十分有用なメソッドやプロパティを揃えたクラス（Dataのラッパーと見てもいい）
+- XxxState / makeXxxState: UIの表示のためにViewに直接渡される、Viewに合わせて形を整えた型
 */
 
-class LapState {
-	id = uid("lap-")
+//#region XxxData
+
+interface LapData {
+	id: string
 	offsetSeconds: number
-	constructor(offsetSeconds: number) {
-		this.offsetSeconds = offsetSeconds
+}
+const newLapData = (offsetSeconds: number): LapData => ({
+	id: uid("lap-"),
+	offsetSeconds,
+})
+interface TimerData {
+	id: string
+	title: string
+	offsetSeconds: number
+	beginDate: string | undefined
+	isRunning: boolean
+	isFolded: boolean
+	isAboutToReset: boolean
+	isAboutToRemove: boolean
+	laps: LapData[]
+}
+const newTimerData = (title = "Timer"): TimerData => ({
+	beginDate: undefined,
+	id: uid("timer-"),
+	isAboutToRemove: false,
+	isAboutToReset: false,
+	isFolded: true,
+	isRunning: false,
+	laps: [],
+	offsetSeconds: 0,
+	title,
+})
+interface AppData {
+	timers: TimerData[]
+	landing: boolean
+}
+const newAppData = (): AppData => ({
+	timers: [],
+	landing: true,
+})
+
+//#endregion
+//#region Xxx
+
+class Lap {
+	constructor(
+		public o: LapData, // data (reference)
+		readonly p: Timer, // parent (reference)
+	) { }
+	selfDuration() {
+		const { o, p } = this
+		const prev = p.prevLap(o.id)
+		if (prev) return this.totalDuration() - prev.totalDuration()
+		else return this.totalDuration()
 	}
-	serialize() {
-		const { id, offsetSeconds } = this
-		return ({ id, offsetSeconds })
+	totalDuration() {
+		const { o } = this
+		return o.offsetSeconds
 	}
-	static deserialize(code: any) {
-		const { id, offsetSeconds } = code
-		const o = new LapState(offsetSeconds)
-		o.id = id
-		return o
+	remove() {
+		const { o, p } = this
+		p.removeLap(o.id)
 	}
 }
-export type ROLapState = Readonly<Pick<LapState, "id" | "offsetSeconds">>
-class TimerState {
-	id = uid("timer-")
-	title: string
-	offsetSeconds = 0
-	beginDate: string | undefined = undefined
-	isRunning = false
-	isFolded = true
-	isAboutToReset = false
-	isAboutToDelete = false
-	laps: LapState[] = []
-	constructor(title = "Timer") {
-		this.title = title
-	}
-	passedSeconds(): number {
-		if (this.isRunning) {
-			if (this.beginDate === undefined) {
-				throw "BUG"
-			}
-			return this.offsetSeconds + (new Date().getTime() - new Date(this.beginDate).getTime()) / 1000
+class Timer {
+	constructor(
+		public o: TimerData, // data (reference)
+		readonly p: App, // parent (reference)
+	) { }
+	seconds(): number {
+		const { o } = this
+		if (o.isRunning) {
+			if (!o.beginDate) bug()
+			return o.offsetSeconds + date2sec(nowDate()) - date2sec(o.beginDate)
 		}
-		return this.offsetSeconds
+		return o.offsetSeconds
+	}
+	start() {
+		const { o } = this
+		o.isRunning = true
+		o.beginDate = nowDate()
+	}
+	pause() {
+		const { o } = this
+		o.offsetSeconds = this.seconds()
+		o.isRunning = false
+		o.beginDate = undefined
 	}
 	reset() {
-		this.offsetSeconds = 0
-		this.beginDate = undefined
-		this.isAboutToReset = false
-		this.isAboutToDelete = false
-		this.laps = []
+		const { o } = this
+		o.offsetSeconds = 0
+		o.isRunning = false
+		o.beginDate = undefined
+		o.laps = []
 	}
-	serialize() {
-		const { id, title, offsetSeconds, beginDate, isRunning, isFolded, isAboutToReset, isAboutToDelete, laps } = this
-		return { id, title, offsetSeconds, beginDate, isRunning, isFolded, isAboutToReset, isAboutToDelete, laps: laps.map(o => o.serialize()) }
+	laps() {
+		const { o } = this
+		return o.laps.map(o => new Lap(o, this))
 	}
-	static deserialize(code: any) {
-		const { id, title, offsetSeconds, beginDate, isRunning, isFolded, isAboutToReset, isAboutToDelete, laps } = code
-		const o = new TimerState()
-		o.id = id
+	prevLap(id: string) {
+		const { o } = this
+		const i = o.laps.findIndex(o => o.id === id)
+		if (i <= 0) return undefined
+		return new Lap(o.laps[i - 1], this)
+	}
+	sinceLastLap() {
+		const { o } = this
+		if (o.laps.length === 0) return this.seconds()
+		return this.seconds() - last(o.laps).offsetSeconds
+	}
+	removeLap(id: string) {
+		const { o } = this
+		removeFromArray(o.laps, o => o.id === id)
+	}
+	addLap() {
+		const { o } = this
+		o.laps.push(newLapData(this.seconds()))
+	}
+	toggleFold() {
+		const { o } = this
+		o.isFolded = !o.isFolded
+	}
+	resetAlert(v: boolean) {
+		const { o } = this
+		o.isAboutToReset = v
+	}
+	removeAlert(v: boolean) {
+		const { o } = this
+		o.isAboutToRemove = v
+	}
+	hideAlerts() {
+		const { o } = this
+		o.isAboutToReset = false
+		o.isAboutToRemove = false
+	}
+	setTitle(title: string) {
+		const { o } = this
 		o.title = title
-		o.offsetSeconds = offsetSeconds
-		o.beginDate = beginDate
-		o.isRunning = isRunning
-		o.isFolded = isFolded
-		o.isAboutToReset = isAboutToReset
-		o.isAboutToDelete = isAboutToDelete
-		o.laps = laps.map(o => LapState.deserialize(o))
-		return o
+	}
+	remove() {
+		const { o, p } = this
+		p.removeTimer(o.id)
+	}
+	putTimer(id: string) {
+		const { o, p } = this
+		p.putTimer(id, o.id)
 	}
 }
-export type ROTimerState = Readonly<Pick<TimerState, "id" | "title" | "isAboutToDelete" | "isAboutToReset" | "isFolded" | "isRunning" | "passedSeconds"> & { laps: ROLapState[] }>
-class State {
-	timers: TimerState[] = []
-	serialize() {
-		const { timers } = this
-		return { timers: timers.map(o => o.serialize()) }
+class App {
+	constructor(
+		public o: AppData, // data (reference)
+	) { }
+	getJSON(): string {
+		return JSON.stringify(this.o)
 	}
-	static deserialize(code: any) {
-		const { timers } = code
-		const o = new State()
-		o.timers = timers.map(o => TimerState.deserialize(o))
-		return o
+	setJSON(json: string) {
+		this.o = JSON.parse(json)
+		this.o.landing = true // TODO
+	}
+	timers() {
+		const { o } = this
+		return o.timers.map(o => new Timer(o, this))
+	}
+	removeTimer(id: string) {
+		const { o } = this
+		removeFromArray(o.timers, o => o.id === id)
+	}
+	addTimer() {
+		const { o } = this
+		o.timers.push(newTimerData())
+	}
+	landingVisibility(f: boolean) {
+		const { o } = this
+		o.landing = f
+	}
+	reset() {
+		// TODO
+		// this.o = newAppData()
+		localStorage.removeItem("persist_store")
+		location.reload()
+	}
+	putTimer(from: string, to: string) {
+		const { o } = this
+		const fi = o.timers.findIndex(o => o.id === from)
+		const ft = o.timers.findIndex(o => o.id === to)
+		if (fi < 0 || ft < 0) bug()
+		const i = o.timers[fi]
+		const t = o.timers[ft]
+		o.timers[fi] = t
+		o.timers[ft] = i
 	}
 }
-export type ROState = Readonly<{ timers: ROTimerState[] }>
 
-let state: State = new State() // initial state
+//#endregion
+//#region XxxState
 
-export const getState = (): ROState => state
-export const getJSON = () => JSON.stringify(state.serialize())
-export const setJSON = bindAction((json: string) => state = State.deserialize(JSON.parse(json)))
-export const actions = {
-	timer(id: string) {
-		const timer = state.timers.find(o => o.id === id)
-		if (!timer) throw "BUG"
-		return bindActions({
-			start() {
-				timer.isAboutToDelete = false
-				timer.isAboutToReset = false
-				timer.isRunning = true
-				timer.beginDate = new Date().toISOString()
-			},
-			pause() {
-				timer.isAboutToDelete = false
-				timer.isAboutToReset = false
-				timer.offsetSeconds = timer.passedSeconds()
-				timer.beginDate = undefined
-				timer.isRunning = false
-			},
-			addLap() {
-				timer.isAboutToDelete = false
-				timer.isAboutToReset = false
-				timer.laps.push(new LapState(timer.passedSeconds()))
-			},
-			fold() {
-				timer.isAboutToDelete = false
-				timer.isAboutToReset = false
-				timer.isFolded = true
-			},
-			unfold() {
-				timer.isAboutToDelete = false
-				timer.isAboutToReset = false
-				timer.isFolded = false
-			},
-			resetAlert(visibility: boolean) {
-				timer.isAboutToDelete = false
-				timer.isAboutToReset = false
-				timer.isAboutToReset = visibility
-			},
-			deleteAlert(visibility: boolean) {
-				timer.isAboutToDelete = false
-				timer.isAboutToReset = false
-				timer.isAboutToDelete = visibility
-			},
-			setTitle(title: string) {
-				timer.title = title
-			},
-			reset() {
-				timer.isAboutToReset = false
-				timer.reset()
-			},
-			delete() {
-				timer.isAboutToDelete = false
-				state.timers = state.timers.filter(o => o.id !== id)
-			},
-		})
+export type LapState = ReturnType<typeof makeLapState>
+const makeLapState = (o: Lap, i: number) => ({
+	index: "#" + padZero(i + 1, 2),
+	selfDuration: timeStr(o.selfDuration()),
+	totalDuration: timeStr(o.totalDuration()),
+
+	remove: () => o.remove(),
+})
+export type ResetAlertState = ReturnType<typeof makeTimerState>["resetAlert"]
+export type RemoveAlertState = ReturnType<typeof makeTimerState>["removeAlert"]
+export type TimerState = ReturnType<typeof makeTimerState>
+const makeTimerState = (o: Timer) => ({
+	id: o.o.id,
+	inputId: "timer-title-input-" + o.o.id,
+	title: o.o.title,
+	duration: timeStr(o.seconds()),
+	lapDuration: timeStr(o.sinceLastLap()),
+	isRunning: o.o.isRunning,
+	isFolded: o.o.isFolded,
+	isAboutToReset: o.o.isAboutToReset,
+	isAboutToDelete: o.o.isAboutToRemove,
+	laps: o.laps().map((o, i) => makeLapState(o, i)),
+
+	start: (e: Event) => { e.stopPropagation(); o.hideAlerts(); o.start(); },
+	pause: (e: Event) => { e.stopPropagation(); o.hideAlerts(); o.pause(); },
+	addLap: (e: Event) => { e.stopPropagation(); o.hideAlerts(); o.addLap(); },
+	toggleFold: () => { o.hideAlerts(); o.toggleFold(); },
+	showResetAlert: (e: Event) => { e.stopPropagation(); o.hideAlerts(); o.resetAlert(true); },
+	showRemoveAlert: () => { o.hideAlerts(); o.removeAlert(true); },
+	// @ts-ignore
+	setTitle: (e: Event) => { o.setTitle(e.target.value); },
+	resetAlert: {
+		yes: () => { o.hideAlerts(); o.reset(); },
+		cancel: () => { o.resetAlert(false) },
 	},
-	lap(timerId: string, lapId: string) {
-		const timer = state.timers.find(o => o.id === timerId)
-		if (!timer) throw "BUG"
-		return bindActions({
-			delete() {
-				timer.laps = timer.laps.filter(o => o.id !== lapId)
-			},
-		})
+	removeAlert: {
+		yes: () => { o.hideAlerts(); o.remove() },
+		cancel: () => { o.removeAlert(false) },
 	},
-	addTimer: bindAction(() => {
-		state.timers.push(new TimerState())
-	}),
-}
 
-type Listener = (state: ROState, action?: Action) => void
-let listeners: Listener[] = []
-export const subscribe = (listener: Listener) => {
-	listeners.push(listener)
-	return () => listeners = listeners.filter(o => o !== listener)
-}
-function onUpdate(action?: Action) {
-	const fn = listeners.concat()
-	fn.forEach(o => o(state, action))
-}
+	dragstart: (e: DragEvent) => {
+		e.dataTransfer?.setData("text/plain", "#timer_" + o.o.id.split("-")[1])
+	},
+	dragover: (e: DragEvent) => { e.preventDefault(); },
+	drop: (e: DragEvent) => {
+		e.preventDefault();
+		const t = e.dataTransfer?.getData("text/plain");
+		if (t && t.startsWith("#timer_")) {
+			const id = "timer-" + t.substr(7);
+			o.putTimer(id);
+		}
+	},
+})
+export type AppState = ReturnType<typeof makeAppState>
+export const makeAppState = (o: App) => ({
+	timers: o.timers().map(o => makeTimerState(o)),
+	landing: o.o.landing,
 
-type Action = (...args: any[]) => void
-type Actions = {
-	[name: string]: Action
-}
-function bindAction<T extends Action>(action: T): T {
-	//@ts-ignore
-	return (...args) => {
-		action(...args)
-		onUpdate(action)
+	addTimer: () => o.addTimer(),
+	reset: () => {
+		if (confirm("Do you really want to reset the app? This action cannot be undone.")) {
+			o.reset();
+		}
+	},
+	onScroll: (e: Event) => {
+		//@ts-ignore
+		const elm: HTMLElement = e.target
+		o.landingVisibility(elm.scrollTop < 50)
 	}
-}
-function bindActions<T extends Actions>(actions: T): T {
-	let mapped: Partial<T> = {}
-	for (let i in actions) {
-		mapped[i] = bindAction(actions[i])
-	}
-	//@ts-ignore
-	return mapped;
-}
+})
+
+//#endregion
+//#region Singleton - store
+
+export const store = new App(newAppData())
+
+//#endregion
 
 function uid(prefix = "id_"): string {
 	let o = ""
 	while (o.length < 8)
 		o += Math.random().toString(36).slice(2, 6)
 	return prefix + o.slice(0, 8)
+}
+
+function date2sec(date: string): number {
+	return new Date(date).getTime() / 1000
+}
+function nowDate(): string {
+	return new Date().toISOString()
+}
+function bug(): never {
+	throw "BUG"
+}
+function removeFromArray<T>(arr: T[], predicate: (o: T) => boolean) {
+	// arr: reference
+	const i = arr.findIndex(predicate)
+	if (i < 0) bug()
+	arr.splice(i, 1)
+}
+function padZero(n: number, len: number) {
+	return n.toString().padStart(len, "0")
+}
+function timeStr(seconds: number) {
+	const s = Math.floor(seconds % 60)
+	const m = Math.floor(seconds / 60) % 60
+	const h = Math.floor(seconds / 3600)
+
+	const ms = padZero(m, 2) + ":" + padZero(s, 2)
+	if (h === 0) return ms
+	return h + ":" + ms
+}
+function last<T>(arr: T[]): T {
+	return arr[arr.length - 1]
 }

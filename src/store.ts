@@ -182,10 +182,7 @@ class App {
 		o.landing = f
 	}
 	reset() {
-		// TODO
-		// this.o = newAppData()
-		localStorage.removeItem("persist_store")
-		location.reload()
+		this.o = newAppData()
 	}
 	putTimer(from: string, to: string) {
 		const { o } = this

@@ -1,10 +1,12 @@
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import sourcemaps from 'rollup-plugin-sourcemaps';
+import replace from "@rollup/plugin-replace";
 import * as path from "path";
 
 const files = [
 	"index.js",
+	"sw.js",
 ]
 
 export default args => files.map(file => ({
@@ -19,6 +21,9 @@ export default args => files.map(file => ({
 		}
 	],
 	plugins: [
+		replace({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+    }), // for workbox
 		resolve(),
 		commonjs(),
 		sourcemaps(),

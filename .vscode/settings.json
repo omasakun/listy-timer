@@ -1,5 +1,6 @@
 {
 	"cSpell.words": [
+		"Cacheable",
 		"Listy",
 		"crossorigin",
 		"devtools",
@@ -11,6 +12,8 @@
 		"pnpm",
 		"pnpx",
 		"prebuild",
+		"precache",
+		"precaching",
 		"sourcemap",
 		"tsbuildinfo",
 		"unistore"

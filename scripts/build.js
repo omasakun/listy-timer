@@ -21,13 +21,14 @@ const sass = exec({ persistentOutput: true, displayName: "sass" })
 	`sass ${() => i0() + ":" + o()} --no-source-map --update --indented --style=expanded --color --quiet` // TODO: `--quiet` might not be good
 
 const workbox = exec({ displayName: "workbox" })
-	`workbox generateSW scripts/workbox-config.js --loglevel error --color ${i0}/ ${o}/sw.js`
+	`workbox injectManifest scripts/workbox-config.js --loglevel error --color ${i0}/ ${i0}/sw.js ${o}/sw.js`
 
 // task chains
 const src = fo.src("src")
-const scripts = src.filterFiles("**/@(*.ts|*.tsx)").cache().then(tsc).then(rollup)
+const ts = src.filterFiles("**/@(*.ts|*.tsx)").cache().then(tsc)
+const scripts = fo.merge([ts, src.filterFiles("**/*.js")]).cache().then(rollup)
 const styles = src.filterFiles("**/@(*.sass)").cache().then(sass)
-const assets = src.filterFiles("**/!(*.ts|*.tsx|*.sass)")
+const assets = src.filterFiles("**/!(*.ts|*.tsx|*.js|*.sass)")
 const merged = fo.merge([scripts, styles, assets])
 const offline = merged.cache().then(workbox)
 const dest = fo.merge([merged, offline])

@@ -1,6 +1,9 @@
 import { render } from "lit-html";
-import { getJSON, setJSON, subscribe, getState } from "./store";
+import { getJSON, setJSON, subscribe } from "./store";
 import { app } from "./view";
+
+
+
 
 showBanner();
 normalizeURL();
